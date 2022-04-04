@@ -1,0 +1,37 @@
+= Lab Utilities
+
+
+== sleep
+
+[source,c,subs="verbatim"]
+----
+include::sleep.c[]
+----
+
+== pingpong
+
+[source,c,subs="verbatim"]
+----
+include::pingpong.c[]
+----
+
+== primes
+
+[source,c,subs="verbatim"]
+----
+include::primes.c[]
+----
+
+== find
+
+[source,c,subs="verbatim"]
+----
+include::find.c[]
+----
+
+== xargs
+
+[source,c,subs="verbatim"]
+----
+include::xargs.c[]
+----
