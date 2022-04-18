@@ -35,3 +35,14 @@ include::find.c[]
 ----
 include::xargs.c[]
 ----
+
+代码编写完成后需要修改Makefile，UPROGS添加如下内容
+
+[source]
+----
+        $U/_sleep\
+        $U/_pingpong\
+        $U/_primes\
+        $U/_find\
+        $U/_xargs\
+----
