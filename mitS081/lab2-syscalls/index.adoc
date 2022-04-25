@@ -24,6 +24,8 @@
 
 == System call tracing
 
+=== Requirement
+
 ************************************************
 在本作业中，您将添加一个系统调用跟踪功能，该功能可能会在以后调试实验时帮助您。
 你需要创建一个名称为 `trace` 的系统调用。 它需要一个名称为 `mask` 类型是integer的参数，
@@ -87,3 +89,206 @@ kernel/syscall.c中定义了获取系统调用参数的函数，你可以在kern
 * 修改fork()（参考kernel/proc.c）方法，把父进程的跟踪标识复制到子进程中。
 * 修改kernel/syscall.c中的syscall()函数打印跟踪信息，你需要使用一个数组保存需要跟踪的系统调用名称。
 
+=== Answer
+
+.Makefile
+====
+[source,subs="verbatim"]
+----
+UPROGS=\
+        $U/_cat\
+        $U/_echo\
+        $U/_forktest\
+        $U/_grep\
+        $U/_init\
+        $U/_kill\
+        $U/_ln\
+        $U/_ls\
+        $U/_mkdir\
+        $U/_rm\
+        $U/_sh\
+        $U/_stressfs\
+        $U/_usertests\
+        $U/_grind\
+        $U/_wc\
+        $U/_zombie\
+        $U/_trace\              <1>
+----
+<1> 添加$U/_trace\
+====
+
+====
+.user/user.h
+[source,c,subs="verbatim"]
+----
+int uptime(void);
+int trace(int);                <1>
+----
+<1> 添加用户空间stub
+====
+
+
+====
+.user/usys.pl
+[source,c,subs="verbatim"]
+----
+entry("trace");
+----
+====
+
+
+====
+.kernel/syscall.h
+[source,c,subs="verbatim"]
+----
+#define SYS_trace  22
+----
+====
+
+====
+.kernel/proc.h
+[source,c,subs="verbatim"]
+----
+struct proc {
+  struct spinlock lock;
+
+  // p->lock must be held when using these:
+  enum procstate state;        // Process state
+  struct proc *parent;         // Parent process
+  void *chan;                  // If non-zero, sleeping on chan
+  int killed;                  // If non-zero, have been killed
+  int xstate;                  // Exit status to be returned to parent's wait
+  int pid;                     // Process ID
+  int tracemask;               // Trace Mask                   <1>
+
+  // these are private to the process, so p->lock need not be held.
+  uint64 kstack;               // Virtual address of kernel stack
+  uint64 sz;                   // Size of process memory (bytes)
+  pagetable_t pagetable;       // User page table
+  struct trapframe *trapframe; // data page for trampoline.S
+  struct context context;      // swtch() here to run process
+  struct file *ofile[NOFILE];  // Open files
+  struct inode *cwd;           // Current directory
+  char name[16];               // Process name (debugging)
+};
+----
+<1> 添加字段保存trace参数
+====
+
+====
+.kernel/sysproc.c
+[source,c,subs="verbatim"]
+----
+uint64
+sys_trace(void)
+{
+  int mask;
+  if(argint(0, &mask) < 0)
+      return -1;
+  myproc()->tracemask = mask;
+  return 0;
+}
+----
+====
+
+====
+.kernel/proc.c
+[source,c,subs="verbatim"]
+----
+static void
+freeproc(struct proc *p)
+{
+  //...
+  p->tracemask = 0;      <1>
+  //...
+}
+
+int
+fork(void)
+{
+  //...
+  np->tracemask = p->tracemask;         <2>
+  //...
+}
+----
+<1> 重置trace字段
+<2> 复制tracemark到子进程
+====
+
+====
+.kernel/syscall.c
+[source,c,subs="verbatim"]
+----
+extern uint64 sys_trace(void);
+
+//...
+
+static uint64 (*syscalls[])(void) = {
+  //...
+  [SYS_trace]   sys_trace,
+}
+
+static char *syscall_names[] = {
+        "", "fork","exit","wait","pipe","read","kill","exec",
+        "fstat","chdir","dup","getpid","sbrk","sleep","uptime",
+        "open","write","mknod","unlink","link","mkdir","close"
+};
+
+void
+syscall(void)
+{
+  int num;
+  struct proc *p = myproc();
+
+  num = p->trapframe->a7;
+  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
+    p->trapframe->a0 = syscalls[num]();
+    int tm = p->tracemask;
+    if(tm) {
+      int i = 1 << num;
+      if((tm & i) != 0) {
+        printf("%d: syscall %s -> %d\n", p->pid, syscall_names[num], p->trapframe->a0);
+      }
+    }
+  } else {
+    printf("%d %s: unknown sys call %d\n",
+            p->pid, p->name, num);
+    p->trapframe->a0 = -1;
+  }
+}
+
+----
+====
+
+运行第二个测试时会出现 `syscall panic` 的报错，后期再解决
+
+image::../images/panic.png[]
+
+== Sysinfo
+
+=== Requirement
+
+****
+本作业中你需要添加一个名称为 `sysinfo` 的系统调用用于收集系统运行信息，它只有一个类型是
+`struct sysinfo` (参考kernel/sysinfo.h) 的参数，此系统调用需要对参数的各个属性赋值，
+系统的空闲内存数量赋值给 `freemem` 属性，单位是字节，进程的 `state` 值不是 `UNUSED` 的进程数量赋值
+给 `nproc` 属性。我们提供了一个测试程序 `sysinfotest`，此程序运行后打印 `sysinfotest: OK` 表示执行成功。
+****
+
+一些提示：
+
+* Makefile 的 UPROGS 段添加 `$U/_sysinfotest`;
+* 运行make qemu时user/sysinfotest.c会编译失败，此时需要添加sysinfo系统调用，步骤与上一个作业类似，注意在
+user/user.h中声明sysinfo()的原型前需要先声明struct sysinfo。
+
+[source,c,subs="verbatim"]
+----
+struct sysinfo;
+int sysinfo(struct sysinfo *);
+----
+
+解决了编译问题后运行sysinfotest还是会失败，因为此时还没有在内核中实现系统调用。
+
+* sysinfo需要将 struct sysinfo 复制回用户空间，参考 sys_fstat() (kernel/sysfile.c) 和 filestat() (kernel/file.c) 了解  copyout() 的使用方法。
+* 在 kernel/kalloc.c 中添加一个收集空闲内存的函数。
+* 在 kernel/proc.c 中添加一个收集进程数量的函数。
