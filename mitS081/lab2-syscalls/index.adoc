@@ -85,5 +85,5 @@ stub会使用 RISC-V的ecall 指令转换到内核空间。 修复编译问题�
 * 在kernel/sysproc.c中添加一个系统调用的函数sys_trace()，该函数把它的参数使用一个新的变量记录在proc结构体中(参考kernel/proc.h)。
 kernel/syscall.c中定义了获取系统调用参数的函数，你可以在kernel/sysproc.c中查看此函数的使用示例。
 * 修改fork()（参考kernel/proc.c）方法，把父进程的跟踪标识复制到子进程中。
-* 修改kernel/syscall.c中的syscall()函数打印跟踪信息，你需要使用一个数组报错需要跟踪的系统调用名称。
+* 修改kernel/syscall.c中的syscall()函数打印跟踪信息，你需要使用一个数组保存需要跟踪的系统调用名称。
 
