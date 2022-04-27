@@ -292,3 +292,151 @@ int sysinfo(struct sysinfo *);
 * sysinfo需要将 struct sysinfo 复制回用户空间，参考 sys_fstat() (kernel/sysfile.c) 和 filestat() (kernel/file.c) 了解  copyout() 的使用方法。
 * 在 kernel/kalloc.c 中添加一个收集空闲内存的函数。
 * 在 kernel/proc.c 中添加一个收集进程数量的函数。
+
+=== Answer
+
+.Makefile
+====
+[source,subs="verbatim"]
+----
+UPROGS=\
+        $U/_cat\
+        $U/_echo\
+        $U/_forktest\
+        $U/_grep\
+        $U/_init\
+        $U/_kill\
+        $U/_ln\
+        $U/_ls\
+        $U/_mkdir\
+        $U/_rm\
+        $U/_sh\
+        $U/_stressfs\
+        $U/_usertests\
+        $U/_grind\
+        $U/_wc\
+        $U/_zombie\
+        $U/_trace\
+        $U/_sysinfotest\
+----
+====
+
+====
+.user/user.h
+[source,c,subs="verbatim"]
+----
+struct sysinfo;
+int sysinfo(struct sysinfo*);
+----
+====
+
+
+====
+.user/usys.pl
+[source,c,subs="verbatim"]
+----
+entry("sysinfo");
+----
+====
+
+
+====
+.kernel/syscall.h
+[source,c,subs="verbatim"]
+----
+#define SYS_sysinfo  23
+----
+====
+
+====
+.kernel/sysproc.c
+[source,c,subs="verbatim"]
+----
+extern uint64 page_count;
+extern uint64 proc_count;
+
+uint64
+sys_sysinfo(void)
+{
+  uint64 st;
+  if(argaddr(0, &st) < 0) {
+    return -1;
+  }
+  struct sysinfo info = {page_count * PGSIZE, proc_count};
+  if (copyout(myproc()->pagetable, st, (char*) &info, sizeof(info)) < 0) {
+    return -1;
+  }
+  return 0;
+}
+----
+====
+
+====
+.kernel/syscall.c
+[source,c,subs="verbatim"]
+----
+extern uint64 sys_sysinfo(void);
+
+//...
+
+static uint64 (*syscalls[])(void) = {
+  //...
+  [SYS_sysinfo]   sys_sysinfo,
+}
+
+----
+====
+
+
+====
+.kernel/kalloc.c
+[source,c,subs="verbatim"]
+----
+uint64 page_count;
+
+void
+kfree(void *pa)
+{
+  //...
+  page_count++;
+  release(&kmem.lock);
+}
+
+void *
+kalloc(void)
+{
+  struct run *r;
+
+  acquire(&kmem.lock);
+  r = kmem.freelist;
+  if(r) {
+    kmem.freelist = r->next;
+    page_count--;
+  }
+  //...
+}
+----
+====
+
+====
+.kernel/proc.c
+[source,c,subs="verbatim"]
+----
+uint64 proc_count;
+
+static struct proc*
+allocproc(void)
+{
+  //...
+  proc_count++;
+  return p;
+}
+
+static void
+freeproc(struct proc *p)
+{
+  //...
+  proc_count--;
+}
+----
+====
