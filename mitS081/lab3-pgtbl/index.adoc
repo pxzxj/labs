@@ -1,0 +1,54 @@
+= Lab page tables
+
+本实验中你需要查看并修改页表相关代码用于简化从用户空间复制数据到内核空间的函数
+
+[NOTE]
+====
+在开始编码之前，请阅读 https://pdos.csail.mit.edu/6.828/2020/xv6/book-riscv-rev1.pdf[xv6书] 的第 3 章以及相关的源代码：
+
+* kern/memlayout.h, which captures the layout of memory.
+* kern/vm.c包含了大部分虚拟内存的代码。
+* kernel/kalloc.c包含了分配和释放物理内存的代码
+====
+
+开始编码前要先切换到pgtbl分支
+
+[source,bash]
+----
+  $ git fetch
+  $ git checkout pgtbl
+  $ make clean
+----
+
+== Print a page table ([green]#easy#)
+
+=== Requirement
+为了帮助你学习RISC-V页表以及以后可能要进行代码调试，你的第一个任务是写一个函数打印页表内容
+
+******
+定义一个名称为vmprint()的函数，它接收一个pagetable_t参数并按照下面描述的格式打印页表内容，
+为了打印第一个进程的页表，在exce.c的 `return argc` 前插入 `if(p->pid==1) vmprint(p->pagetable)` 。
+如果你通过了 make grade 中的 pte printout 测试，你能拿到本次作业的满分。
+******
+
+完成此作业后启动xv6，它会打印出下面的内容
+
+
+
+=== Answer
+
+
+== A kernel page table per process ([red]#hard#)
+
+=== Requirement
+
+
+=== Answer
+
+
+== Simplify copyin/copyinstr ([red]#hard#)
+
+=== Requirement
+
+
+=== Answer
