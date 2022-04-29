@@ -31,8 +31,34 @@
 如果你通过了 make grade 中的 pte printout 测试，你能拿到本次作业的满分。
 ******
 
-完成此作业后启动xv6，它会打印出下面的内容
+完成此作业后启动xv6，它会打印出下面的内容，, describing the page table of the first process at the point when it has just finished exec()ing init:
 
+----
+page table 0x0000000087f6e000
+..0: pte 0x0000000021fda801 pa 0x0000000087f6a000
+.. ..0: pte 0x0000000021fda401 pa 0x0000000087f69000
+.. .. ..0: pte 0x0000000021fdac1f pa 0x0000000087f6b000
+.. .. ..1: pte 0x0000000021fda00f pa 0x0000000087f68000
+.. .. ..2: pte 0x0000000021fd9c1f pa 0x0000000087f67000
+..255: pte 0x0000000021fdb401 pa 0x0000000087f6d000
+.. ..511: pte 0x0000000021fdb001 pa 0x0000000087f6c000
+.. .. ..510: pte 0x0000000021fdd807 pa 0x0000000087f76000
+.. .. ..511: pte 0x0000000020001c0b pa 0x0000000080007000
+----
+
+第一行展示vmprint的参数，下面的每一行都是一个PTE信息， including PTEs that refer to page-table pages deeper in the tree.
+每个PTE行使用 `..` 进行缩进表示在页表树的深度，每个PTE行展示它在页表页的索引，pte bits，以及从PTE提取出的物理地址，上面的示例中
+顶级页表页包含了0到255条目的映射，第0个条目的下一层只映射了索引0，and the bottom-level for that index 0 has entries 0, 1, and 2 mapped.
+
+你代码的执行结果可能和示例中的物理地址不同，虚拟地址应该是相同的。
+
+参考下面的提示进行编码：
+
+* 你可以把vmprint()放在kernel/vm.c中
+* 使用kernel/riscv.h末尾的宏定义
+* The function freewalk may be inspirational.
+* 在kernel/defs.h中定义vmprint的函数原型，这样你就能在exec.c中调用它
+* 在printf中使用 %p 按照十六进制打印完整的64位PTE和它的地址
 
 
 === Answer
@@ -41,6 +67,12 @@
 == A kernel page table per process ([red]#hard#)
 
 === Requirement
+
+Xv6有一个内核页表，当它处于内核态时会使用到该页表。内核页表把物理地址映射到相同的虚拟地址。Xv6为每个进程提供了一个单独的页表，
+也就是该进程的用户态地址空间，进程的页表只包含它自己虚拟内存的映射，从虚拟地址0开始。因为内核页表不包含进程地址空间的映射，
+所以用户地址在内核中是无效的。如果内核需要使用系统调用的指针参数(例如write()的buffer参数指针)，它首先需要将指针翻译为对应的
+物理地址。本节和下一节的目标是允许内核直接取消指针参数的引用。
+
 
 
 === Answer
