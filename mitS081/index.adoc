@@ -1,5 +1,8 @@
 = mitS081
 
-== Introduction
+== Resources
 
-课程地址： https://www.bilibili.com/video/BV19k4y1C7kA
+* https://www.bilibili.com/video/BV19k4y1C7kA
+* https://www.bookstack.cn/read/xv6-chinese/README.md
+* https://mit-public-courses-cn-translatio.gitbook.io/mit6-s081/
+* https://codestep-weijiew.vercel.app/

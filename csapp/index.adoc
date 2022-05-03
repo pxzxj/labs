@@ -1,0 +1,7 @@
+= CSAPP
+
+
+== Resources
+
+* https://www.bilibili.com/video/BV1iW411d7hd
+* https://fengmuzi2003.gitbook.io/csapp3e/

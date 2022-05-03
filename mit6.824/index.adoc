@@ -1,0 +1,7 @@
+= mit6.824
+
+
+== Resources
+
+* https://www.bilibili.com/video/BV1R7411t71W
+* http://nil.csail.mit.edu/6.824/2020/
