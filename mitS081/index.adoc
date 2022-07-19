@@ -3,6 +3,7 @@
 == Resources
 
 * https://www.bilibili.com/video/BV19k4y1C7kA
+* https://pdos.csail.mit.edu/6.828/2020/schedule.html
 * https://www.bookstack.cn/read/xv6-chinese/README.md
 * https://mit-public-courses-cn-translatio.gitbook.io/mit6-s081/
 * https://codestep-weijiew.vercel.app/
